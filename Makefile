@@ -1,23 +1,16 @@
 # You can override the CFLAGS and C compiler externally,
 # e.g. make PLATFORM=cortex-m3
-CFLAGS += -g -Wall -Werror -I include
-
-ifeq ($(PLATFORM),cortex-m3)
-  CC      = arm-none-eabi-gcc
-  AR      = arm-none-eabi-ar
-  CFLAGS += -mcpu=cortex-m3 -mthumb
-  CFLAGS += -fno-common -Os
-  CFLAGS += -ffunction-sections -fdata-sections
-endif
-
-# With this, the makefile should work on Windows also.
-ifdef windir
-  RM = del
-endif
+CFLAGS += -ffreestanding -Os -Wall -Iinclude -Ilibm/common
 
 # Just include all the source files in the build.
-CSRC = $(wildcard src/*.c)
-OBJS = $(CSRC:.c=.o)
+LIBCSRC = $(wildcard libc/*.c)
+
+LIBMSRC = $(wildcard libm/common/*.c)
+LIBMSRC += $(wildcard libm/complex/*.c)
+LIBMSRC += $(wildcard libm/math/*.c)
+
+LIBCOBJS = $(LIBCSRC:.c=.o)
+LIBMOBJS = $(LIBMSRC:.c=.o)
 
 # And the files for the test suite
 TESTS_CSRC = $(wildcard tests/*_tests.c)
@@ -25,14 +18,18 @@ TESTS_OBJS = $(TESTS_CSRC:.c=)
 
 # Some of the files uses "templates", i.e. common pieces
 # of code included from multiple files.
-CFLAGS += -Isrc/templates
+CFLAGS += -Ilibc/templates
 
-all: libc.a
+all: libc.a libm.a
 
 clean:
-	$(RM) $(OBJS) $(TESTS_OBJS) libc.a
+	$(RM) $(LIBCOBJS) $(LIBMOBJS) $(TESTS_OBJS) libc.a
 
-libc.a: $(OBJS)
+libc.a: $(LIBCOBJS)
+	$(RM) $@
+	$(AR) ru $@ $^
+
+libm.a: $(LIBMOBJS)
 	$(RM) $@
 	$(AR) ru $@ $^
 
