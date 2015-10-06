@@ -23,7 +23,7 @@ CFLAGS += -Ilibc/templates
 all: libc.a libm.a
 
 clean:
-	$(RM) $(LIBCOBJS) $(LIBMOBJS) $(TESTS_OBJS) libc.a
+	$(RM) $(LIBCOBJS) $(LIBMOBJS) $(TESTS_OBJS) libc.a libm.a
 
 libc.a: $(LIBCOBJS)
 	$(RM) $@
