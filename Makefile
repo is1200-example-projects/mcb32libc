@@ -1,3 +1,5 @@
+BUILDDIR ?= build
+
 # You can override the CFLAGS and C compiler externally,
 # e.g. make PLATFORM=cortex-m3
 CFLAGS += -ffreestanding -Os -Wall -Iinclude -Ilibm/common
@@ -12,10 +14,6 @@ LIBMSRC += $(wildcard libm/math/*.c)
 LIBCOBJS = $(LIBCSRC:.c=.o)
 LIBMOBJS = $(LIBMSRC:.c=.o)
 
-# And the files for the test suite
-TESTS_CSRC = $(wildcard tests/*_tests.c)
-TESTS_OBJS = $(TESTS_CSRC:.c=)
-
 # Some of the files uses "templates", i.e. common pieces
 # of code included from multiple files.
 CFLAGS += -Ilibc/templates
@@ -23,21 +21,19 @@ CFLAGS += -Ilibc/templates
 all: libc.a libm.a
 
 clean:
-	$(RM) $(LIBCOBJS) $(LIBMOBJS) $(TESTS_OBJS) libc.a libm.a
+	$(RM) $(BUILDDIR)/$(LIBCOBJS) $(BUILDDIR)/$(LIBMOBJS) $(BUILDDIR)/libc.a $(BUILDDIR)/libm.a
 
-libc.a: $(LIBCOBJS)
+$(BUILDDIR):
+	mkdir $(BUILDDIR)
+
+libc.a: $(LIBCOBJS) | $(BUILDDIR)
 	$(RM) $@
-	$(AR) ru $@ $^
+	$(AR) ru $(BUILDDIR)/$@ $(addprefix $(BUILDDIR)/,$^)
 
-libm.a: $(LIBMOBJS)
+libm.a: $(LIBMOBJS) | $(BUILDDIR)
 	$(RM) $@
-	$(AR) ru $@ $^
+	$(AR) ru $(BUILDDIR)/$@ $(addprefix $(BUILDDIR)/,$^)
 
-run_tests: $(TESTS_OBJS)
-	$(foreach f,$^,$f)
-
-tests/%: tests/%.c tests/tests_glue.c libc.a
-	$(CC) $(CFLAGS) -o $@ $^
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+%.o: %.c | $(BUILDDIR)
+	@mkdir -p $(BUILDDIR)/$(@D)
+	$(CC) $(CFLAGS) -c -o $(BUILDDIR)/$@ $<
