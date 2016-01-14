@@ -1,8 +1,9 @@
 BUILDDIR ?= build
+STDIO ?= 1
 
 # You can override the CFLAGS and C compiler externally,
 # e.g. make PLATFORM=cortex-m3
-CFLAGS += -ffreestanding -Os -Wall -Iinclude -Ilibm/common
+CFLAGS += -ffreestanding -Os -Wall -Iinclude -Ilibm/common -DSTDIO=$(STDIO)
 
 # Just include all the source files in the build.
 LIBCSRC = $(wildcard libc/*.c)
